@@ -13,9 +13,9 @@ def adsl_list(request):
         for query in queries:
             if (query.last_update_time + datetime.timedelta(seconds=60 * 60)).replace(
                     tzinfo=None) > datetime.datetime.utcnow():
-                str = query.line + ':ONLINE\n'
-            else:
-                str = query.line + ':ERROR\n'
+                str = query.host + ' ' + query.line + ':ONLINE\n'
+            # else:
+            #     str = query.host + ' ' + query.line + ':ERROR\n'
 
             rets += str
     return HttpResponse(rets)
