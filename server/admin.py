@@ -4,8 +4,8 @@ from models import LineHosts
 
 # Register your models here.
 class LineHostsAdmin(admin.ModelAdmin):
-    list_display = ('line', 'host', 'status', 'last_update_time')
-    search_fields = ('line', 'host', 'status')
+    list_display = ('line', 'host', 'adsl_ip', 'status', 'last_update_time')
+    search_fields = ('line', 'host', 'adsl_ip', 'status')
 
 
 admin.site.register(LineHosts, LineHostsAdmin)

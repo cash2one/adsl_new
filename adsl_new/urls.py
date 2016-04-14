@@ -18,6 +18,7 @@ from django.contrib import admin
 from server import views
 
 urlpatterns = [
+    url(r'^$',views.index,name='index'),
     url(r'^admin/', admin.site.urls),
     url(r'^adsl/list', views.adsl_list, name='adsl_list'),
     url(r'^adsl/host/report', views.adsl_host_report, name='adsl_host_report'),

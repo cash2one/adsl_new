@@ -1,11 +1,16 @@
-from django.shortcuts import render_to_response, HttpResponse
-from django.http import HttpResponseNotFound, HttpResponseForbidden
+from django.shortcuts import HttpResponse, redirect
+from django.http import HttpResponseForbidden
+from django.core.urlresolvers import reverse
 from django.views.decorators.csrf import csrf_exempt
 from models import LineHosts
 import datetime
 
 
 # Create your views here.
+def index(request):
+    return redirect(reverse('adsl_list'))
+
+
 def adsl_list(request):
     queries = LineHosts.objects.filter(status='available')
     rets = ''
@@ -13,9 +18,9 @@ def adsl_list(request):
         for query in queries:
             if (query.last_update_time + datetime.timedelta(seconds=60 * 60)).replace(
                     tzinfo=None) > datetime.datetime.utcnow():
-                str = query.host + ' ' + query.line + ':ONLINE\n'
-            # else:
-            #     str = query.host + ' ' + query.line + ':ERROR\n'
+                str = query.host + ' ' + query.line + ' ONLINE\n'
+            else:
+                str = query.host + ' ' + query.line + ' ERROR\n'
 
             rets += str
     return HttpResponse(rets)
@@ -39,18 +44,18 @@ def adsl_host_report(request):
         host = request.GET['host']
         ret = LineHosts.objects.filter(host=host)
         if len(ret) > 0:
-            if adsl_ip != ret.adsl_ip:
-                ret.adsl_ip = adsl_ip
-                ret.last_update_time = datetime.datetime.now()
-                ret.status = 'available'
-                ret.save()
+            if adsl_ip != ret[0].adsl_ip:
+                ret[0].adsl_ip = adsl_ip
+                ret[0].last_update_time = datetime.datetime.now()
+                ret[0].status = 'available'
+                ret[0].save()
 
                 return HttpResponse('OK')
             else:
                 return HttpResponse('Need re-dail')
         else:
-            line = '100.100.100.100:8' + host.replace('seo','')
-            record = LineHosts(host=host,line=line,adsl_ip=adsl_ip,status='available')
+            line = '100.100.100.100:8' + host.replace('seo', '')
+            record = LineHosts(host=host, line=line, adsl_ip=adsl_ip, status='available')
             record.save()
             return HttpResponse('add new line, host:' + host + ' line:' + line)
 
