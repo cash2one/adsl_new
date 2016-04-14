@@ -1,13 +1,28 @@
 from django.shortcuts import HttpResponse, redirect
-from django.http import HttpResponseForbidden,HttpResponseNotFound,HttpResponseBadRequest
+from django.http import HttpResponseForbidden, HttpResponseNotFound, HttpResponseBadRequest
 from django.core.urlresolvers import reverse
 from django.views.decorators.csrf import csrf_exempt
 from models import LineHosts
-import datetime
+from logging.handlers import TimedRotatingFileHandler
+import datetime, os, logging
 
-TM_DELTA = 60*60
+TM_DELTA = 60 * 60
+
 
 # Create your views here.
+def getlogger(logfile='./log'):
+    log_path = os.path.dirname(logfile)
+    if not os.path.exists(log_path):
+        os.makedirs(log_path)
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    handler = TimedRotatingFileHandler(logfile, 'd')
+    formatter = logging.Formatter('[%(asctime)s] [%(filename)s:%(lineno)d] [%(levelname)s] %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    return logger
+
+
 def index(request):
     return redirect(reverse('adsl_list'))
 
