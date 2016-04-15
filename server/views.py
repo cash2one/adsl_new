@@ -105,7 +105,7 @@ def adsl_status(request):
                 if queries:
                     return HttpResponse(queries[0].status)
                 else:
-                    return HttpResponseNotFound()
+                    return HttpResponse('404')
         else:
             rets = ''
             queries = LineHosts.objects.all()
