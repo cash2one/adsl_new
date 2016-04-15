@@ -65,15 +65,15 @@ def adsl_host_report(request):
             host = request.POST['host']
             ret = LineHosts.objects.filter(host=host)
             if len(ret) > 0:
-                if adsl_ip != ret[0].adsl_ip:
-                    ret[0].adsl_ip = adsl_ip
-                    ret[0].last_update_time = datetime.datetime.now()
-                    ret[0].status = 'available'
-                    ret[0].save()
+                # if adsl_ip != ret[0].adsl_ip:
+                ret[0].adsl_ip = adsl_ip
+                ret[0].last_update_time = datetime.datetime.now()
+                ret[0].status = 'available'
+                ret[0].save()
 
-                    return HttpResponse('OK')
-                else:
-                    return HttpResponse(content='Need re-dail')
+                return HttpResponse('OK')
+                # else:
+                #     return HttpResponse(content='Need re-dail')
             else:
                 line = '100.100.100.100:8' + host.replace('seo', '')
                 record = LineHosts(host=host, line=line, adsl_ip=adsl_ip, status='available')
