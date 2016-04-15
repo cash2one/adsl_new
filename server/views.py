@@ -58,7 +58,10 @@ def adsl_host_report(request):
                 return HttpResponseForbidden(content='not authorized')
 
         elif 'host' in request.POST:
-            adsl_ip = request.META.get('REMOTE_ADDR')
+            if request.META.has_key('HTTP_X_FORWARDED_FOR'):
+                adsl_ip = request.META.get('HTTP_X_FORWARDED_FOR')
+            else:
+                adsl_ip = request.META.get('REMOTE_ADDR')
             host = request.POST['host']
             ret = LineHosts.objects.filter(host=host)
             if len(ret) > 0:
