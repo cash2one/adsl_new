@@ -9,6 +9,7 @@ import datetime, os, logging
 TM_DELTA = 60 * 60
 LB_IP = '183.61.70.113'
 
+
 # Create your views here.
 def getlogger(logfile='./log'):
     log_path = os.path.dirname(logfile)
