@@ -98,6 +98,9 @@ def adsl_status(request):
                     elif tmdelta > TM_DELTA:
                         s = query.host + ' ' + query.line + ' ' + query.adsl_ip + ' ' + query.status + ' ' + ' last updated before ' + str(
                             tmdelta) + ' seconds. WARN_TTL1min'
+                    else:
+                        s = query.host + ' ' + query.line + ' ' + query.adsl_ip + ' ' + query.status + ' ' + ' last updated before ' + str(
+                            tmdelta) + ' seconds. WARN_other'
                     rets += s + '\n'
 
                 return HttpResponse(rets)
