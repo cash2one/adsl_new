@@ -3,36 +3,32 @@ from django.http import HttpResponseForbidden, HttpResponseNotFound, HttpRespons
 from django.core.urlresolvers import reverse
 from django.views.decorators.csrf import csrf_exempt
 from models import LineHosts
-
-import datetime
-import logging
+from logging.handlers import TimedRotatingFileHandler
+import datetime, os, logging
 
 TM_DELTA = 60
-LB_IP = '183.61.70.113'
-logger = logging.getLogger('access')
+LB_IP = '183.61.80.68'
 
 
 # Create your views here.
-def getclientip(request):
-    if request.META.has_key('HTTP_X_FORWARDED_FOR'):
-        clientip = request.META.get('HTTP_X_FORWARDED_FOR')
-    else:
-        clientip = request.META.get('REMOTE_ADDR')
-
-    return clientip
+def getlogger(logfile='./log'):
+    log_path = os.path.dirname(logfile)
+    if not os.path.exists(log_path):
+        os.makedirs(log_path)
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    handler = TimedRotatingFileHandler(logfile, 'd')
+    formatter = logging.Formatter('[%(asctime)s] [%(filename)s:%(lineno)d] [%(levelname)s] %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    return logger
 
 
 def index(request):
-    ip = getclientip(request)
-    logger.debug(ip + ' ' + request.method + ' ' + request.get_full_path())
-
     return redirect(reverse('adsl_list'))
 
 
 def adsl_list(request):
-    ip = getclientip(request)
-    logger.info(ip + ' ' + request.method + ' ' + request.get_full_path())
-
     queries = LineHosts.objects.filter(status='available')
     rets = ''
     if len(queries) > 0:
@@ -49,24 +45,30 @@ def adsl_list(request):
 
 @csrf_exempt
 def adsl_host_report(request):
-    ip = getclientip(request)
-    logger.info(ip + ' ' + request.method + ' ' + request.get_full_path() + ' ' + str(request.POST))
-
-    if request.method == 'POST' and request.META['HTTP_USER_AGENT'].lower() == 'dj-adsl-backend':
+    if request.method == 'POST':
         if 'ip' in request.POST:
-            ips = request.POST['ip']
-            for ip in ips.split(','):
-                line = LineHosts.objects.filter(host=ip)
-                if line:
-                    line[0].status = 'used'
-                    line[0].save()
-            return HttpResponse('OK')
+            if request.META['HTTP_USER_AGENT'].lower() == 'dj-adsl-backend':
+                ips = request.POST['ip']
+                for ip in ips.split(','):
+                    line = LineHosts.objects.filter(host=ip)
+                    if line:
+                        line[0].status = 'used'
+                        line[0].save()
+                        return HttpResponse('OK')
+                    else:
+                        return HttpResponseNotFound(content='no host')
+            else:
+                return HttpResponseForbidden(content='not authorized')
 
         elif 'host' in request.POST:
+            if request.META.has_key('HTTP_X_FORWARDED_FOR'):
+                adsl_ip = request.META.get('HTTP_X_FORWARDED_FOR')
+            else:
+                adsl_ip = request.META.get('REMOTE_ADDR')
             host = request.POST['host']
             ret = LineHosts.objects.filter(host=host)
             if len(ret) > 0:
-                ret[0].adsl_ip = ip
+                ret[0].adsl_ip = adsl_ip
                 ret[0].last_update_time = datetime.datetime.now()
                 ret[0].status = 'available'
                 ret[0].save()
@@ -75,7 +77,7 @@ def adsl_host_report(request):
             else:
                 n = '8' + host.replace('seo', '')
                 line = LB_IP + ':' + n
-                record = LineHosts(host=host, line=line, adsl_ip=ip, status='available')
+                record = LineHosts(host=host, line=line, adsl_ip=adsl_ip, status='available')
                 record.save()
                 return HttpResponse('add new line, host:' + host + ' line:' + line)
         else:
@@ -85,9 +87,6 @@ def adsl_host_report(request):
 
 
 def adsl_status(request):
-    ip = getclientip(request)
-    logger.info(ip + ' ' + request.method + ' ' + request.get_full_path())
-
     if request.method == 'GET':
         if 'show' in request.GET:
             if request.GET['show'] == 'all':
