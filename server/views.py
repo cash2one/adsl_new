@@ -6,8 +6,8 @@ from models import LineHosts
 from logging.handlers import TimedRotatingFileHandler
 import datetime, os, logging
 
-TM_DELTA = 60 * 60
-LB_IP = '183.61.70.113'
+TM_DELTA = 60
+LB_IP = '183.61.80.68'
 
 
 # Create your views here.
@@ -54,7 +54,9 @@ def adsl_host_report(request):
                     if line:
                         line[0].status = 'used'
                         line[0].save()
-                return HttpResponse('OK')
+                        return HttpResponse('OK')
+                    else:
+                        return HttpResponseNotFound(content='no host')
             else:
                 return HttpResponseForbidden(content='not authorized')
 
@@ -98,6 +100,9 @@ def adsl_status(request):
                     elif tmdelta > TM_DELTA:
                         s = query.host + ' ' + query.line + ' ' + query.adsl_ip + ' ' + query.status + ' ' + ' last updated before ' + str(
                             tmdelta) + ' seconds. WARN_TTL1min'
+                    else:
+                        s = query.host + ' ' + query.line + ' ' + query.adsl_ip + ' ' + query.status + ' ' + ' last updated before ' + str(
+                            tmdelta) + ' seconds. WARN_status'
                     rets += s + '\n'
 
                 return HttpResponse(rets)
