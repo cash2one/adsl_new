@@ -29,17 +29,23 @@ def index(request):
 
 
 def adsl_list(request):
-    queries = LineHosts.objects.filter(status='available')
     rets = ''
+
+    if 'gid' in request.GET:
+        gid = int(request.GET['gid'])
+        queries = LineHosts.objects.filter(status='available', gid=gid)
+    else:
+        queries = LineHosts.objects.filter(status='available')
+
     if len(queries) > 0:
         for query in queries:
-            if (query.last_update_time + datetime.timedelta(seconds=TM_DELTA)).replace(
-                    tzinfo=None) > datetime.datetime.utcnow():
+            if (query.last_update_time + datetime.timedelta(seconds=TM_DELTA)) > datetime.datetime.now():
                 str = query.host + ' ' + query.line + ' ONLINE\n'
             else:
                 str = query.host + ' ' + query.line + ' ERROR\n'
 
             rets += str
+
     return HttpResponse(rets)
 
 
@@ -93,7 +99,7 @@ def adsl_status(request):
                 rets = ''
                 queries = LineHosts.objects.all()
                 for query in queries:
-                    tmdelta = (datetime.datetime.utcnow() - query.last_update_time.replace(tzinfo=None)).seconds
+                    tmdelta = (datetime.datetime.now() - query.last_update_time).seconds
                     if query.status == 'available' and tmdelta <= TM_DELTA:
                         s = query.host + ' ' + query.line + ' ' + query.adsl_ip + ' ' + query.status + ' ' + ' last updated before ' + str(
                             tmdelta) + ' seconds.'
@@ -117,7 +123,7 @@ def adsl_status(request):
             rets = ''
             queries = LineHosts.objects.all()
             for query in queries:
-                tmdelta = (datetime.datetime.utcnow() - query.last_update_time.replace(tzinfo=None)).seconds
+                tmdelta = (datetime.datetime.now() - query.last_update_time).seconds
                 if query.status == 'available' and tmdelta <= TM_DELTA:
                     s = query.host + ' ' + query.line + ' ' + query.adsl_ip + ' ' + query.status + ' ' + ' last updated before ' + str(
                         tmdelta) + ' seconds.'
